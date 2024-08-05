@@ -5,14 +5,15 @@ import (
 )
 
 type QueueItem struct {
+	id          int
 	Connections int
-	ServerIndex int
+	ServerAddr  string
 }
 
-func NewQueueItem(connections, index int) *QueueItem {
+func NewQueueItem(connections int, address string) *QueueItem {
 	return &QueueItem{
 		Connections: connections,
-		ServerIndex: index,
+		ServerAddr:  address,
 	}
 }
 
@@ -20,6 +21,7 @@ type PriorityQueue []*QueueItem
 
 func (pq *PriorityQueue) Push(x interface{}) {
 	item := x.(*QueueItem)
+	item.id = len(*pq)
 	*pq = append(*pq, item)
 }
 
@@ -31,6 +33,7 @@ func (pq *PriorityQueue) Pop() interface{} {
 	old := *pq
 	n := len(old)
 	item := old[n-1]
+	item.id = -1
 	*pq = old[0 : n-1]
 	return item
 }
@@ -41,16 +44,18 @@ func (pq PriorityQueue) Less(i, j int) bool {
 
 func (pq PriorityQueue) Swap(i, j int) {
 	pq[i], pq[j] = pq[j], pq[i]
+	pq[i].id = i
+	pq[j].id = j
 }
 
 // Update modifies the number of connections of a specific QueueItem.
 func (pq *PriorityQueue) Update(item *QueueItem, connections int) {
 	item.Connections = connections
-	heap.Fix(pq, item.ServerIndex)
+	heap.Fix(pq, item.id)
 }
 
 // Will implement a Min Heap so must return the item with the least connections
-func (pq *PriorityQueue) GetServerWithMinConnections() *QueueItem {
+func (pq *PriorityQueue) GetItemMinConnections() *QueueItem {
 	if pq.Len() == 0 {
 		return nil
 	}
