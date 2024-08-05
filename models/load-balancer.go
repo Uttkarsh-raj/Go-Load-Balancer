@@ -3,17 +3,21 @@ package models
 import (
 	"container/heap"
 	"fmt"
+	"net/http"
+	"net/url"
 )
 
 type LoadBalancer struct {
-	Servers     map[string]QueueItem // map of server address to the Item
-	RRNext      int                  // will tell which is the next server to return in a round robin fashion
-	Connections PriorityQueue        // to return the server wiht the least connections in a dynamic load balancer
+	ServerAddr  []string
+	Servers     map[string]int // map of server address to the Item
+	RRNext      int            // will tell which is the next server to return in a round robin fashion
+	Connections PriorityQueue  // to return the server wiht the least connections in a dynamic load balancer
 }
 
 func NewLoadBalancer() *LoadBalancer {
 	lb := &LoadBalancer{
-		Servers:     make(map[string]QueueItem),
+		ServerAddr:  make([]string, 0),
+		Servers:     make(map[string]int),
 		RRNext:      -1,
 		Connections: make(PriorityQueue, 0),
 	}
@@ -21,19 +25,68 @@ func NewLoadBalancer() *LoadBalancer {
 	return lb
 }
 
+var client = &http.Client{}
+
 func (lb *LoadBalancer) AddServer(connections int, serverAdd string) error {
 	_, contains := lb.Servers[serverAdd]
 	if !contains {
 		item := NewQueueItem(connections, serverAdd)
-		lb.Servers[serverAdd] = *item
+		lb.ServerAddr = append(lb.ServerAddr, serverAdd)
+		lb.Servers[serverAdd] = len(lb.ServerAddr) - 1
 		heap.Push(&lb.Connections, item)
 		return nil
 	}
 	return fmt.Errorf("error: This server already exists")
 }
 
-func (lb *LoadBalancer) GetServerWithMinimumServer() *QueueItem {
+func (lb *LoadBalancer) GetServerWithMinimumServerAddr() string {
 	item := lb.Connections.GetItemMinConnections()
+	index := lb.Servers[item.ServerAddr]
+	if len(lb.ServerAddr) > 1 {
+		lb.ServerAddr = append(lb.ServerAddr[:index], lb.ServerAddr[index+1:]...)
+	} else {
+		lb.ServerAddr = lb.ServerAddr[:0]
+	}
 	delete(lb.Servers, item.ServerAddr)
-	return item
+	return item.ServerAddr
+}
+
+func (lb *LoadBalancer) GetRoundRobinNextServerAddr() string {
+	lb.RRNext = (lb.RRNext + 1) % len(lb.ServerAddr)
+	return lb.ServerAddr[lb.RRNext]
+}
+
+func (lb *LoadBalancer) ForwardRequest(request *http.Request) (*http.Response, error) {
+	if len(lb.ServerAddr) == 0 {
+		return nil, fmt.Errorf("error: No servers available. Register a server")
+	}
+
+	serverAddr := lb.GetRoundRobinNextServerAddr() // Can change between the Round Robin or the Connections efficient method here
+	serverURL, err := url.Parse(serverAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a new request to forward to the target server
+	proxyURL := serverURL.String() + request.URL.Path
+	proxyReq, err := http.NewRequest(request.Method, proxyURL, request.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Copy headers from the original request to the new request
+	for key, values := range request.Header {
+		for _, value := range values {
+			proxyReq.Header.Add(key, value)
+		}
+	}
+
+	// fmt.Printf("This response is from the server address %s \n", proxyReq.URL)
+
+	resp, err := client.Do(proxyReq)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }

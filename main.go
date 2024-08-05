@@ -21,7 +21,7 @@ func main() {
 	// balancer.AddServer(2, "item3")
 	// balancer.AddServer(8, "item4")
 	// for i := 0; i < 4; i++ {
-	// 	item := balancer.GetServerWithMinimumServer()
+	// 	item := balancer.GetServerWithMinimumServerAddr()
 	// 	fmt.Printf("The item is %s with %d connections\n", item.ServerAddr, item.Connections)
 	// }
 }

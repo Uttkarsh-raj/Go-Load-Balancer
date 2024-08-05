@@ -7,5 +7,5 @@ import (
 )
 
 func SetRoutes(router *gin.Engine, loadBalancer *models.LoadBalancer) {
-	router.POST("/addServer", controller.AddNewServer(loadBalancer))
+	router.Any("/*path", controller.ForwardRequest(loadBalancer))
 }
