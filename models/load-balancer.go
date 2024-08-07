@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sync"
 )
 
 type LoadBalancer struct {
@@ -12,6 +13,7 @@ type LoadBalancer struct {
 	Servers     map[string]int // map of server address to the index for easy retreival
 	RRNext      int            // will tell which is the next server to return in a round robin fashion
 	Connections PriorityQueue  // to return the server wiht the least connections in a dynamic load balancer
+	Mutex       sync.Mutex
 }
 
 func NewLoadBalancer() *LoadBalancer {
@@ -28,6 +30,9 @@ func NewLoadBalancer() *LoadBalancer {
 var client = &http.Client{}
 
 func (lb *LoadBalancer) AddServer(connections int, serverAdd string) error {
+	lb.Mutex.Lock()
+	defer lb.Mutex.Unlock()
+
 	_, contains := lb.Servers[serverAdd]
 	if !contains {
 		item := NewQueueItem(connections, serverAdd)
@@ -40,6 +45,9 @@ func (lb *LoadBalancer) AddServer(connections int, serverAdd string) error {
 }
 
 func (lb *LoadBalancer) DeleteServer(address string) error {
+	lb.Mutex.Lock()
+	defer lb.Mutex.Unlock()
+
 	_, contains := lb.Servers[address]
 	if contains {
 		_ = lb.Connections.RemoveByServerAddr(address)
@@ -60,7 +68,7 @@ func (lb *LoadBalancer) DeleteServer(address string) error {
 
 func (lb *LoadBalancer) GetServerWithMinimumServerAddr() string {
 	item := lb.Connections.GetItemMinConnections()
-	fmt.Printf("Response from address %s with connections %d. \n", item.ServerAddr, item.Connections)
+	fmt.Printf("Response from address %s with %d requests handled. \n", item.ServerAddr, item.Connections)
 	item.Connections++
 	lb.Connections.Update(item, item.Connections)
 	return item.ServerAddr
@@ -72,6 +80,9 @@ func (lb *LoadBalancer) GetRoundRobinNextServerAddr() string {
 }
 
 func (lb *LoadBalancer) ForwardRequest(request *http.Request) (*http.Response, error) {
+	lb.Mutex.Lock()
+	defer lb.Mutex.Unlock()
+
 	if len(lb.ServerAddr) == 0 {
 		return nil, fmt.Errorf("error: No servers available. Register a server")
 	}

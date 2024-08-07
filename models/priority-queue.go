@@ -38,14 +38,14 @@ func (pq *PriorityQueue) Pop() interface{} {
 	return item
 }
 
-func (pq PriorityQueue) Less(i, j int) bool {
-	return pq[i].Connections < pq[j].Connections
+func (pq *PriorityQueue) Less(i, j int) bool {
+	return (*pq)[i].Connections < (*pq)[j].Connections
 }
 
-func (pq PriorityQueue) Swap(i, j int) {
-	pq[i], pq[j] = pq[j], pq[i]
-	pq[i].id = i
-	pq[j].id = j
+func (pq *PriorityQueue) Swap(i, j int) {
+	(*pq)[i], (*pq)[j] = (*pq)[j], (*pq)[i]
+	(*pq)[i].id = i
+	(*pq)[j].id = j
 }
 
 // Update modifies the number of connections of a specific QueueItem.
