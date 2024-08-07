@@ -7,5 +7,5 @@ import (
 )
 
 func SetRoutes(router *gin.Engine, loadBalancer *models.LoadBalancer) {
-	router.Any("/*path", controller.ForwardRequest(loadBalancer))
+	router.Any("/*path", controller.ForwardRequest(loadBalancer)) // Single route for all the requests
 }

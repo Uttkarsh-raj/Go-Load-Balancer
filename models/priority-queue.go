@@ -61,3 +61,13 @@ func (pq *PriorityQueue) GetItemMinConnections() *QueueItem {
 	}
 	return (*pq)[0] // return the element with the least connections
 }
+
+// Remove item from queue with a certain address
+func (pq *PriorityQueue) RemoveByServerAddr(serverAddr string) *QueueItem {
+	for i, item := range *pq {
+		if item.ServerAddr == serverAddr {
+			return heap.Remove(pq, i).(*QueueItem)
+		}
+	}
+	return nil
+}

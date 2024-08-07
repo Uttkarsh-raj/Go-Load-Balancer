@@ -39,6 +39,25 @@ func (lb *LoadBalancer) AddServer(connections int, serverAdd string) error {
 	return fmt.Errorf("error: This server already exists")
 }
 
+func (lb *LoadBalancer) DeleteServer(address string) error {
+	_, contains := lb.Servers[address]
+	if contains {
+		_ = lb.Connections.RemoveByServerAddr(address)
+		index := lb.Servers[address]
+		if len(lb.ServerAddr) > 1 {
+			lb.ServerAddr = append(lb.ServerAddr[:index], lb.ServerAddr[index+1:]...)
+		} else {
+			lb.ServerAddr = lb.ServerAddr[:0]
+		}
+		delete(lb.Servers, address)
+		for i := 0; i < len(lb.ServerAddr); i++ {
+			lb.Servers[lb.ServerAddr[i]] = i
+		}
+		return nil
+	}
+	return fmt.Errorf("error: The server does not exists")
+}
+
 func (lb *LoadBalancer) GetServerWithMinimumServerAddr() string {
 	item := lb.Connections.GetItemMinConnections()
 	fmt.Printf("Response from address %s with connections %d. \n", item.ServerAddr, item.Connections)
