@@ -13,7 +13,8 @@ func main() {
 	fmt.Println("Starting Server.....")
 	router := gin.New()
 	router.Use(gin.Logger())
-	balancer := models.NewLoadBalancer()
+	// balancer := models.NewRoundRobinLoadBalancer()
+	balancer := models.NewLeastConnectionLoadBalancer()
 	routes.SetRoutes(router, balancer)
 	log.Fatal(router.Run(":3000"))
 }

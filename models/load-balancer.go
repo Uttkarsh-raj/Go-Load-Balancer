@@ -8,11 +8,20 @@ import (
 	"sync"
 )
 
+// Enum for the strategy/type
+type LoadBalancingStrategy int
+
+const (
+	RoundRobin LoadBalancingStrategy = iota
+	LeastConnections
+)
+
 type LoadBalancer struct {
 	ServerAddr  []string       // list of server address in the load balalncer
 	Servers     map[string]int // map of server address to the index for easy retreival
 	RRNext      int            // will tell which is the next server to return in a round robin fashion
 	Connections PriorityQueue  // to return the server wiht the least connections in a dynamic load balancer
+	Type        LoadBalancingStrategy
 	Mutex       sync.Mutex
 }
 
@@ -22,8 +31,21 @@ func NewLoadBalancer() *LoadBalancer {
 		Servers:     make(map[string]int),
 		RRNext:      -1,
 		Connections: make(PriorityQueue, 0),
+		Type:        RoundRobin,
 	}
 	heap.Init(&lb.Connections)
+	return lb
+}
+
+func NewRoundRobinLoadBalancer() *LoadBalancer {
+	lb := NewLoadBalancer()
+	lb.Type = RoundRobin
+	return lb
+}
+
+func NewLeastConnectionLoadBalancer() *LoadBalancer {
+	lb := NewLoadBalancer()
+	lb.Type = LeastConnections
 	return lb
 }
 
@@ -87,8 +109,16 @@ func (lb *LoadBalancer) ForwardRequest(request *http.Request) (*http.Response, e
 		return nil, fmt.Errorf("error: No servers available. Register a server")
 	}
 
-	// serverAddr := lb.GetRoundRobinNextServerAddr() // Round Robin implementation
-	serverAddr := lb.GetServerWithMinimumServerAddr() // Minimum Connections implementation
+	var serverAddr string
+	switch lb.Type {
+	case RoundRobin:
+		serverAddr = lb.GetRoundRobinNextServerAddr() // Round Robin implementation
+	case LeastConnections:
+		serverAddr = lb.GetServerWithMinimumServerAddr() // Minimum Connections implementation
+	default:
+		return nil, fmt.Errorf("error: Unknown load balancing strategy")
+	}
+
 	serverURL, err := url.Parse(serverAddr)
 	if err != nil {
 		return nil, err
