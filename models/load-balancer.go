@@ -8,8 +8,8 @@ import (
 )
 
 type LoadBalancer struct {
-	ServerAddr  []string
-	Servers     map[string]int // map of server address to the Item
+	ServerAddr  []string       // list of server address in the load balalncer
+	Servers     map[string]int // map of server address to the index for easy retreival
 	RRNext      int            // will tell which is the next server to return in a round robin fashion
 	Connections PriorityQueue  // to return the server wiht the least connections in a dynamic load balancer
 }
@@ -41,13 +41,9 @@ func (lb *LoadBalancer) AddServer(connections int, serverAdd string) error {
 
 func (lb *LoadBalancer) GetServerWithMinimumServerAddr() string {
 	item := lb.Connections.GetItemMinConnections()
-	index := lb.Servers[item.ServerAddr]
-	if len(lb.ServerAddr) > 1 {
-		lb.ServerAddr = append(lb.ServerAddr[:index], lb.ServerAddr[index+1:]...)
-	} else {
-		lb.ServerAddr = lb.ServerAddr[:0]
-	}
-	delete(lb.Servers, item.ServerAddr)
+	fmt.Printf("Response from address %s with connections %d. \n", item.ServerAddr, item.Connections)
+	item.Connections++
+	lb.Connections.Update(item, item.Connections)
 	return item.ServerAddr
 }
 
@@ -61,7 +57,8 @@ func (lb *LoadBalancer) ForwardRequest(request *http.Request) (*http.Response, e
 		return nil, fmt.Errorf("error: No servers available. Register a server")
 	}
 
-	serverAddr := lb.GetRoundRobinNextServerAddr() // Can change between the Round Robin or the Connections efficient method here
+	// serverAddr := lb.GetRoundRobinNextServerAddr() // Round Robin implementation
+	serverAddr := lb.GetServerWithMinimumServerAddr() // Minimum Connections implementation
 	serverURL, err := url.Parse(serverAddr)
 	if err != nil {
 		return nil, err
@@ -80,8 +77,6 @@ func (lb *LoadBalancer) ForwardRequest(request *http.Request) (*http.Response, e
 			proxyReq.Header.Add(key, value)
 		}
 	}
-
-	// fmt.Printf("This response is from the server address %s \n", proxyReq.URL)
 
 	resp, err := client.Do(proxyReq)
 	if err != nil {

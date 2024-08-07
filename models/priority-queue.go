@@ -59,6 +59,5 @@ func (pq *PriorityQueue) GetItemMinConnections() *QueueItem {
 	if pq.Len() == 0 {
 		return nil
 	}
-	item := heap.Pop(pq).(*QueueItem)
-	return item
+	return (*pq)[0] // return the element with the least connections
 }
