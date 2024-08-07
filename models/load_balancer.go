@@ -90,7 +90,7 @@ func (lb *LoadBalancer) DeleteServer(address string) error {
 
 func (lb *LoadBalancer) GetServerWithMinimumServerAddr() string {
 	item := lb.Connections.GetItemMinConnections()
-	fmt.Printf("Response from address %s with %d requests handled. \n", item.ServerAddr, item.Connections)
+	fmt.Printf("Response from address %s.\n", item.ServerAddr)
 	item.Connections++
 	lb.Connections.Update(item, item.Connections)
 	return item.ServerAddr
@@ -141,6 +141,17 @@ func (lb *LoadBalancer) ForwardRequest(request *http.Request) (*http.Response, e
 	resp, err := client.Do(proxyReq)
 	if err != nil {
 		return nil, err
+	}
+
+	// Decrement the connections count => the server is free again
+	if lb.Type == LeastConnections {
+		go func() {
+			lb.Mutex.Lock()
+			defer lb.Mutex.Unlock()
+			item := lb.Connections.GetItemByServerAddr(serverAddr)
+			item.Connections--
+			lb.Connections.Update(item, item.Connections)
+		}()
 	}
 
 	return resp, nil

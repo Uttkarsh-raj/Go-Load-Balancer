@@ -71,3 +71,12 @@ func (pq *PriorityQueue) RemoveByServerAddr(serverAddr string) *QueueItem {
 	}
 	return nil
 }
+
+func (pq *PriorityQueue) GetItemByServerAddr(serverAddr string) *QueueItem {
+	for _, item := range *pq {
+		if item.ServerAddr == serverAddr {
+			return item
+		}
+	}
+	return nil
+}
