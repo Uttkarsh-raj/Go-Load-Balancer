@@ -32,6 +32,10 @@ Static routing refers to a predetermined, fixed path that network traffic follow
 
 Round Robin is a static routing method where requests are distributed in a cyclic manner. Each server in the pool receives an equal number of requests in turn, regardless of server load or capacity.
 
+https://github.com/user-attachments/assets/4caf8a24-25fe-4309-8ef9-656eebea0c3c
+
+
+
 ### Dynamic Routing
 
 Dynamic routing adjusts the path of network traffic based on real-time conditions, such as server load or network congestion. This helps optimize performance and resource utilization.
@@ -139,7 +143,6 @@ The **Go-Load-Balancer** project offers a flexible solution for load balancing a
 
 ## Screenshots
 <center>
-<img width="1000" src="https://github.com/user-attachments/assets/5dc8d5b4-d387-4722-971f-aabb2eb3761f"></img>
 <br> 
 <img width="1000" src="https://github.com/user-attachments/assets/3068c64b-1303-4779-9bb8-5647efc5f0bf"></img>
 <img width="1000" src="https://github.com/user-attachments/assets/aa9c5525-db19-4412-bc22-f7dba121e52a"></img>
