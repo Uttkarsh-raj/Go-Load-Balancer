@@ -166,8 +166,8 @@ Contributions make the open-source community an amazing place to learn, inspire,
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## License
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+This project is licensed under the MIT License, a permissive open-source license that allows for the use, modification, and distribution of this software. It grants users the freedom to use the software for any purpose, including commercial purposes, as long as the original copyright and license notice is included. See the [LICENSE](LICENSE) file for more information.
+(<a href="#readme-top">back to top</a>)</p>
 
 ## Contact
 Uttkarsh Raj - [GitHub](https://github.com/Uttkarsh-raj)
