@@ -44,6 +44,10 @@ Dynamic routing adjusts the path of network traffic based on real-time condition
 
 The Least Connection method is a dynamic routing strategy that directs new requests to the server with the fewest active connections. This helps balance the load more evenly, especially in environments with varying server capacities or request processing times.
 
+> **_NOTE:_** Here, I have set up 3 demo servers where the sleep time simulates computation time, varying for each server based on its processing power and input data. As seen in the response, the 2nd server, with the shortest sleep time (representing faster computation), handles more requests due to its quicker processing.
+
+https://github.com/user-attachments/assets/b43712a0-e4cb-4dc9-a7f7-274a80b87d46
+
 ### Built With
 - **Golang** - An open-source programming language.
 
